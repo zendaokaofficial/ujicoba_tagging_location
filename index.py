@@ -7,11 +7,12 @@ import pandas as pd
 
 st.title("Tag Multiple GPS Locations to Create a MultiPolygon")
 
+# Initialize session state to store tagged locations
+if "tagged_locations" not in st.session_state:
+    st.session_state.tagged_locations = []
+
 # Sidebar input for tagging
 st.sidebar.markdown("Tag your GPS locations:")
-
-# Initialize a list to store the tagged locations
-tagged_locations = []
 
 # Button to get the current location
 if st.sidebar.button("Get Current Location"):
@@ -23,7 +24,7 @@ if st.sidebar.button("Get Current Location"):
 
         # Store the tagged location as a Point
         point = Point(longitude, latitude)
-        tagged_locations.append(point)
+        st.session_state.tagged_locations.append(point)
 
         st.success(f"Location tagged at Latitude: {latitude}, Longitude: {longitude}")
     else:
@@ -32,23 +33,24 @@ if st.sidebar.button("Get Current Location"):
 # Display tagged locations
 st.sidebar.title("Tagged Locations")
 
-if tagged_locations:
+if st.session_state.tagged_locations:
     st.sidebar.markdown("Tagged Locations:")
     location_table = pd.DataFrame(
         {
-            "Latitude": [point.y for point in tagged_locations],
-            "Longitude": [point.x for point in tagged_locations],
+            "Latitude": [point.y for point in st.session_state.tagged_locations],
+            "Longitude": [point.x for point in st.session_state.tagged_locations],
         }
     )
     st.sidebar.dataframe(location_table)
 
 # Button to create a MultiPolygon
 if st.sidebar.button("Create MultiPolygon"):
-    if tagged_locations:
-        multi_point = MultiPoint(tagged_locations)
+    if st.session_state.tagged_locations:
+        multi_point = MultiPoint(st.session_state.tagged_locations)
         multi_polygon = multi_point.convex_hull
 
-        # You can save the MultiPolygon to a file or perform other actions here.
+        # Store the MultiPolygon in session state
+        st.session_state.multi_polygon = multi_polygon
         st.success("MultiPolygon created.")
 
 # Display the MultiPolygon
